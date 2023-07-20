@@ -65,21 +65,8 @@ xf = @SVector [1.0, 0.0, 0.0, 0.0] # final state
 η0 = open_loop(θ, x0, μ, τ); # guess trajectory
 ξ,data = pronto(θ, x0, η0, τ); # optimal trajectory
 @time ξ,data = pronto(θ, x0, η0, τ); # optimal trajectory
-##
-preview(ξ.x, (1,3))
-preview(η0.x, (1,3))
-preview(η.x, (1,3))
-preview(ξ.x, (2,4))
-preview(ξ.u, 1)
 
 
-opts = Options(
-    projection_alg = Rosenbrock23(),
-    show_substeps = true,
-    show_ξ = true,
-    previewfxn = ξ -> preview(ξ.x, (1,3)),
-)
-# 
 
 
 
