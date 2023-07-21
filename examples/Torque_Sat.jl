@@ -89,7 +89,7 @@ function PRONTO.Pf(θ::TorqueSat,αf,μf,tf)
 
     qf = αf[1:4]
     Mqf = [ZProj(qf)' zeros(3,3);
-    zeros(3,4) I(3)]
+            zeros(3,4) I(3)]
 
     Ar = PRONTO.fx(θ, αf, μf, tf)
     Br = PRONTO.fu(θ, αf, μf, tf)
@@ -117,7 +117,7 @@ t0,tf = τ = (0,67)
 
 
 θ = TorqueSat()
-α = t->x0
+α = t->xd
 μ = t->@SVector zeros(3)
 η = closed_loop(θ,x0,α,μ,τ)
 ξ,data = pronto(θ,x0,η,τ; tol = 1e-4, maxiters = 50)
@@ -127,15 +127,17 @@ t0,tf = τ = (0,67)
 using GLMakie
 fig = Figure()
 ts = 0:0.001:tf
-ax = Axis(fig[1,1]; xlabel="time [s]")
-x1 = [data.ξ[end].x(t)[1:4] for t∈ts]
-lines!(ax, ts, x1)
+ax = Axis(fig[1,1]; xlabel="time [s]", ylabel="quaternion")
+x1 = [data.ξ[end].x(t)[i] for t∈ts, i∈1:4]
+foreach(i->lines!(ax, ts, x1[:,i]), 1:4)
 
 ax = Axis(fig[2,1];xlabel="time [s]", ylabel="angular velocity [rad/s]")
-x2 = [data.ξ[end].x(t)[5:7] for t∈ts]
-lines!(ax, ts, x2)
+x2 = [data.ξ[end].x(t)[i] for t∈ts, i∈5:7]
+foreach(i->lines!(ax, ts, x2[:,i]), 1:3)
 
 ax = Axis(fig[3,1]; xlabel="time [s]", ylabel="input [Nm]")
-u = [data.ξ[end].u(t)[1:3] for t∈ts]
-lines!(ax, ts, u)
+u = [data.ξ[end].u(t)[i] for t∈ts, i∈1:3]
+foreach(i->lines!(ax, ts, u[:,i]), 1:3)
 display(fig)
+
+save("torque_sat.png", fig)
