@@ -1,5 +1,6 @@
 [deps]
 GLMakie = "e9467ef8-e4e7-5192-8a1a-b1aee30e663a"
+MAT = "23992714-dd62-5051-b70f-ba57cb901cac"
 MatrixEquations = "99c1a7ee-ab34-5fd5-8076-27c950a045f4"
 PRONTO = "97df7862-8962-462b-83f4-d1fea1a8c26c"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
