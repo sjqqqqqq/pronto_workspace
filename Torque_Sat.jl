@@ -1,6 +1,9 @@
 using PRONTO
-using StaticArrays, LinearAlgebra
+using StaticArrays 
+using LinearAlgebra
 using MatrixEquations
+
+## ------------------------------- helper functions ------------------------------- ##
 
 function skew(x)
     return [0 -x[3] x[2];
@@ -108,23 +111,24 @@ end
 # must be run after any changes to model definition
 resolve_model(TorqueSat)
 
-
 ## ------------------------------- solving ------------------------------- ##
-
 
 x0 = @SVector [0;1;0;0;0;0;0]
 t0,tf = τ = (0,67)
 
-
 θ = TorqueSat()
+
 α = t->xd
 μ = t->@SVector zeros(3)
 η = closed_loop(θ,x0,α,μ,τ)
-ξ,data = pronto(θ,x0,η,τ; tol = 1e-4, maxiters = 50)
+
+ξ,data = pronto(θ,x0,η,τ; tol = 1e-4)
 
 
 ## ------------------------------- plotting ------------------------------- ##
+
 using GLMakie
+
 fig = Figure()
 ts = 0:0.001:tf
 ax = Axis(fig[1,1]; xlabel="time [s]", ylabel="quaternion")
