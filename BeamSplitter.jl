@@ -1,5 +1,6 @@
 using PRONTO
-using StaticArrays, LinearAlgebra
+using StaticArrays
+using LinearAlgebra
 
 ## --------------------- helper functions --------------------- ##
 
@@ -30,7 +31,7 @@ function x_eig(i)
     x_eig = kron([1;0],w[:,i])
 end
 
-## ------------------------------- beam splitter to eigenstate 4 ------------------------------- ##
+## ------------------------------- beam splitter to 4th eigenstate ------------------------------- ##
 
 @kwdef struct Bs4 <: PRONTO.Model{22,1}
     kl::Float64 # stage cost gain
@@ -79,9 +80,7 @@ resolve_model(Bs4)
 x0 = SVector{22}(x_eig(1))
 t0,tf = τ = (0,1.5)
 
-
 θ = Bs4(kl=0.01, kr=1, kq=1)
 μ = t->SVector{1}(0.5*sin(t))
 η = open_loop(θ,x0,μ,τ)
 @time ξ,data = pronto(θ,x0,η,τ; tol = 1e-3)
-
