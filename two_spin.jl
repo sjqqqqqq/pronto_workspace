@@ -30,7 +30,8 @@ end
 @define_f TwoSpin begin
     H0 = [1 0;0 -1]
     H1 = [0 1;1 0]
-    mprod(-im*(H0+u[1]*H1))*x
+    H2 = [0 -im;im 0]
+    mprod(-im*(H0+sin(u[1])*H1+(1-cos(u[1]))*H2))*x
 end
 
 @define_l TwoSpin 0.01/2*u'*u
@@ -52,11 +53,11 @@ resolve_model(TwoSpin)
 ## --------------------- run optimization --------------------- ##
 
 θ = TwoSpin() # instantiate a new model
-τ = t0,tf = 0,10 # define time domain
+τ = t0,tf = 0,5 # define time domain
 x0 = @SVector [1.0, 0.0, 0.0, 0.0] # initial state
 μ = t->SVector{1}(0.5*sin(t)) # open loop input μ(t)
 η = open_loop(θ, x0, μ, τ); # guess trajectory
-@time ξ,data = pronto(θ, x0, η, τ;tol=1e-4); # optimal trajectory
+@time ξ,data = pronto(θ, x0, η, τ;tol=1e-5); # optimal trajectory
 
 ## --------------------- outputs --------------------- ##
 
