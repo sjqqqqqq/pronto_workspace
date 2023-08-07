@@ -156,7 +156,7 @@ t0,tf = τ = (0,1.5)
 θ = Bs4(kl=0.01, kr=1, kq=1)
 μ = t->SVector{1}(0.5*sin(t))
 η = open_loop(θ,x0,μ,τ)
-@time ξ,data = pronto(θ,x0,η,τ; tol = 1e-3)
+@time ξ,data = pronto(θ,x0,η,τ; tol = 1e-3, maxiters = 50)
 
 
 ##
