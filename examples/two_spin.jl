@@ -1,87 +1,73 @@
 using PRONTO
 using StaticArrays
 using LinearAlgebra
-using Base: @kwdef
 
+## --------------------- helper functions --------------------- ##
 
+function mprod(x)
+    Re = I(2)
+    Im = [0 -1;
+          1 0]
+    M = kron(Re,real(x)) + kron(Im,imag(x))
+    return M
+end
+
+function inprod(x)
+    a = x[1:2]
+    b = x[3:4]
+    P = [a*a'+b*b' -(a*b'+b*a');
+         a*b'+b*a'   a*a'+b*b']
+    return P
+end
+
+## --------------------- modeling --------------------- ##
 @kwdef struct TwoSpin <: Model{4,1}
     kr::Float64 = 1.0
     kq::Float64 = 1.0
 end
 
 
-## --------------------- option 2 --------------------- ##
-
 @define_f TwoSpin begin
-    H0 = [0 0 1 0;0 0 0 -1;-1 0 0 0;0 1 0 0]
-    H1 = [0 -1 0 0;1 0 0 0;0 0 0 -1;0 0 1 0]
-    (H0 + u[1]*H1)*x
+    H0 = [1 0;0 -1]
+    H1 = [0 1;1 0]
+    H2 = [0 -im;im 0]
+    mprod(-im*(H0+sin(u[1])*H1+(1-cos(u[1]))*H2))*x
 end
 
-@define_l TwoSpin begin
-    Rl = [0.01;;]
-    1/2*u'*Rl*u
-end
+@define_l TwoSpin 0.01/2*u'*u
 
 @define_m TwoSpin begin
-    Pl = [0 0 0 0;0 1 0 0;0 0 0 0;0 0 0 1]
+    Pl = [1 0 0 0;0 0 0 0;0 0 1 0;0 0 0 0]
     1/2*x'*Pl*x
 end
 
-@define_Q TwoSpin kq*I(4)
+@define_Q TwoSpin kq*(I(4) - inprod(x))
 @define_R TwoSpin kr*I(1)
+
+PRONTO.Pf(θ::TwoSpin,α,μ,tf) = SMatrix{4,4,Float64}(I(4)-inprod(α))
 
 # must be run after any changes to model definition
 resolve_model(TwoSpin)
-##
 
-# ξ->ξ.x[(1,3)]
-
-# PRONTO.runtime_info(θ::TwoSpin, ξ; verbosity=1) = verbosity >= 1 && println(preview(ξ.x, (1,3)))
-function PRONTO.runtime_info(θ::TwoSpin, ξ; verbosity=1)
-    if verbosity >= 1
-        println(preview(ξ.x, (1,3); color=PRONTO.manto_colors))
-        println(preview(ξ.x, (2,4); color=PRONTO.manto_colors[3:4]))
-        println(preview(ξ.u; color=PRONTO.manto_colors))
-    end
-end
-
-PRONTO.runtime_info(θ::TwoSpin, ξ; verbosity=1) = verbosity >= 1 && println(preview(ξ.u, 1))
-PRONTO.runtime_info(θ::TwoSpin, ξ; verbosity=1) = verbosity >= 1 && println(preview(ξ.x; color=PRONTO.manto_colors))
-
-
-# overwrite default behavior of Pf for TwoSpin models
-PRONTO.Pf(θ::TwoSpin, αf, μf, tf) = SMatrix{4,4,Float64}(I(4))
-# PRONTO.γmax(θ::TwoSpin, ζ, τ) = min(1, 1/maximum(maximum(ζ.x(t) for t in LinRange(τ..., 10000))))
 
 ## --------------------- run optimization --------------------- ##
 
 θ = TwoSpin() # instantiate a new model
-τ = t0,tf = 0,10 # define time domain
-x0 = @SVector [0.0, 1.0, 0.0, 0.0] # initial state
-xf = @SVector [1.0, 0.0, 0.0, 0.0] # final state
-μ = t->[0.1] # open loop input μ(t)
-η = open_loop(θ, xf, μ, τ); # guess trajectory
-η0 = open_loop(θ, x0, μ, τ); # guess trajectory
-ξ,data = pronto(θ, x0, η0, τ); # optimal trajectory
-@time ξ,data = pronto(θ, x0, η0, τ); # optimal trajectory
-##
-preview(ξ.x, (1,3))
-preview(η0.x, (1,3))
-preview(η.x, (1,3))
-preview(ξ.x, (2,4))
-preview(ξ.u, 1)
+τ = t0,tf = 0,5 # define time domain
+x0 = @SVector [1.0, 0.0, 0.0, 0.0] # initial state
+μ = t->SVector{1}(0.5*sin(t)) # open loop input μ(t)
+η = open_loop(θ, x0, μ, τ); # guess trajectory
+@time ξ,data = pronto(θ, x0, η, τ;tol=1e-5); # optimal trajectory
 
+## --------------------- outputs --------------------- ##
 
-opts = Options(
-    projection_alg = Rosenbrock23(),
-    show_substeps = true,
-    show_ξ = true,
-    previewfxn = ξ -> preview(ξ.x, (1,3)),
-)
-# 
+using MAT
 
-
+ts = t0:0.001:tf
+us = [ξ.u(t)[1] for t∈ts]
+file = matopen("Uopt_2spin_10.mat","w")
+write(file,"Uopt",us)
+close(file)
 
 ## --------------------- plots --------------------- ##
 using GLMakie
