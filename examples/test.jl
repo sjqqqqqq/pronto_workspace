@@ -25,3 +25,17 @@ end
     ]  
  
 end
+
+@define_l MixState begin
+    kl/2*u'*I*u 
+end
+
+@define_m MixState begin
+    1/2*x'*x
+end
+
+@define_Q MixState I(3)
+
+@define_R MixState I(1)
+
+resolve_model(MixState)
