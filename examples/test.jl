@@ -3,6 +3,22 @@ using LinearAlgebra
 using StaticArrays
 using Base: @kwdef
 
+using GellMannMatrices
+## helper functions
+function qubit_model(n,H0,Hc,L,x,u)
+    A = gellmann(n)
+    H = H0 + u[1]*Hc
+    ρ = 1/2*I(n)
+    for i in 1:n^2-1
+        ρ += 1/2*(x[i]*A[i])
+    end
+    ρ̇ = -im*(H*ρ-ρ*H) + L*ρ*L' - 1/2*(L'*L*ρ + ρ*L'*L)
+    ẋ = []
+    for i in 1:n^2-1
+        ẋ = [ẋ; real(tr(ρ̇*A[i]))]
+    end
+    return ẋ
+end
 ## ----------------------------------- define the model ----------------------------------- ##
 
 @kwdef struct MixState <: PRONTO.Model{3,1}
@@ -14,16 +30,24 @@ end
     X = [0 1;1 0]   # Pauli matrices
     Y = [0 -im;im 0]
     Z = [1 0;0 -1]
-    
-    H = Z + u[1]*X  # Hamiltonian 
-    ρ = 1/2*(I(2) + x[1]*X + x[2]*Y + x[3]*Z)   # density matrix
-    ρ̇ = -im*(H*ρ-ρ*H)   # master equation
 
-    [
-        real(tr(ρ̇*X)),
-        real(tr(ρ̇*Y)),
-        real(tr(ρ̇*Z)),
-    ]  
+    qubit_model(2,Z,X,zeros(2,2),x,u)
+
+    # A = [X,Y,Z]
+    
+    # H = Z + u[1]*X  # Hamiltonian 
+    # # ρ = 1/2*(I(2) + x[1]*X + x[2]*Y + x[3]*Z)   # density matrix
+    # ρ = 1/2*(I(2))
+    # for i in 1:3
+    #     ρ += 1/2*(x[i]*A[i])
+    # end
+    # ρ̇ = -im*(H*ρ-ρ*H)   # master equation
+
+    # [
+    #     real(tr(ρ̇*X)),
+    #     real(tr(ρ̇*Y)),
+    #     real(tr(ρ̇*Z)),
+    # ]  
  
 end
 

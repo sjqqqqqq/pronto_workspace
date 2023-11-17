@@ -80,8 +80,8 @@ PRONTO.preview(θ::Split4, ξ) = [I(11) I(11)]*(ξ.x.^2)
 # eigenstate 1->4
 
 θ = Split4(kl=0.01, kr=1, kq=1)
-t0,tf = τ = (0,1.5)
+t0,tf = τ = (0,10)
 x0 = SVector{22}(x_eig(1))
-μ = t->SVector{1}(0.4*sin(t))
+μ = t->SVector{1}(0.5*sin(t))
 η = open_loop(θ,x0,μ,τ)
-ξ,data = pronto(θ,x0,η,τ;tol=1e-3,maxiters=50,show_steps=false);
+ξ,data = pronto(θ,x0,η,τ;tol=1e-4,maxiters=50,show_steps=false);

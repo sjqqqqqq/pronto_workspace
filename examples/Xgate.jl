@@ -17,7 +17,7 @@ end
 
 @kwdef struct XGate3 <: PRONTO.Model{12,1}
     kl::Float64 = 0.01
-    kq::Float64 = 0.5
+    kq::Float64 = 0.0
 end
 
 @define_f XGate3 begin
@@ -56,7 +56,7 @@ resolve_model(XGate3)
 
 ## Compute the optimal solution
 
-θ = XGate3()
+θ = XGate3(kq=0.3)
 τ = t0,tf = 0,10
 ψ1 = [1;0;0]
 ψ2 = [0;1;0]
