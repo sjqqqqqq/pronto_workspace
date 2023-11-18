@@ -8,11 +8,10 @@ using GellMannMatrices
 
 function qubit_model(H0,Hc,L,x,u)
     n = size(H0)[1]
-    # m = size(Hc)[3]
-    # l = size(L)[3]
+
     A = gellmann(n)
     H = H0 + u[1]*Hc
-    ρ = 1/2*I(n)
+    ρ = 1/n*I(n)
     for i in 1:n^2-1
         ρ += 1/2*(x[i]*A[i])
     end
@@ -34,10 +33,11 @@ end
     
     H0 = diagm([0,2])
     Hc = [0 1;1 0]
-    L = [0 0;1 0]
+    L = sqrt(1/500)*[0 1;0 0] # need sqrt for decay
+    # L = 1/2*[1 0;0 -1] # no need sqrt for dephase
     # L = zeros(2,2)
 
-    qubit_model(2,H0,Hc,L,x,u)
+    qubit_model(H0,Hc,L,x,u)
  
 end
 
@@ -61,8 +61,9 @@ PRONTO.Pf(θ::SQubit,α,μ,tf) = SMatrix{3,3,Float64}(I(3))
 ## ----------------------------------- solve the problem ----------------------------------- ##
 
 θ = SQubit(kl=0.01)
-t0,tf = τ = (0,10)
+t0,tf = τ = (0,2000)
 x0 = SVector{3}([0,0,-1])
+# x0 = SVector{3}([1,0,0])
 μ = t->SVector{1}(0.0*sin(t))
 η = open_loop(θ,x0,μ,τ)
 # ξ,data = pronto(θ,x0,η,τ;tol=1e-4,maxiters=50);
@@ -72,7 +73,7 @@ x0 = SVector{3}([0,0,-1])
 using GLMakie
 GLMakie.activate!()
 
-ts = range(t0,tf,length=1001);
+ts = range(t0,tf,length=10001);
 
 X = [0 1;1 0]
 Y = [0 -im;im 0]
@@ -83,17 +84,23 @@ Z = [1 0;0 -1]
 
 p1 = zeros(length(ts))
 p2 = zeros(length(ts))
+p3 = zeros(length(ts))
 
 for i in 1:length(ts)
     p1[i] = real([1 0]*ρ[i]*[1;0])[1]
     p2[i] = real([0 1]*ρ[i]*[0;1])[1]
+    # p3[i] = 1/2-1/2*1/exp(1)
+    p3[i] = 1 * 1/exp(1)
 end
+
+ 
 
 
 fig = Figure()
 ax = Axis(fig[1, 1])
 lines!(ax, ts, real(p1); color=:red, linewidth=2, label = "|0⟩")
 lines!(ax, ts, real(p2); color=:blue, linewidth=2, label = "|1⟩")
+lines!(ax, ts, real(p3); color=:green, linewidth=2, label = "1/e")
 axislegend(ax, position = :rc)
 
 display(fig)
