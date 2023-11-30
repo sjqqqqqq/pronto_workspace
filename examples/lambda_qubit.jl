@@ -99,7 +99,7 @@ PRONTO.Pf(θ::LQubit,α,μ,tf) = SMatrix{8,8,Float64}(I(8))
 
 ## ----------------------------------- compute the optimal solution ----------------------------------- ##
 
-θ = LQubit(kl=0.01,kq=0.3)
+θ = LQubit(kl=0.01,kq=0.0)
 t0,tf = τ = (0,5)
 x0 = SVector{8}(psi2x([1;0;0]))
 μ = t->0.3*sin(t)*ones(SVector{4})
