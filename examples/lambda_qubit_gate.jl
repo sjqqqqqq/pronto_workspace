@@ -105,7 +105,7 @@ PRONTO.Pf(θ::LQubit2,α,μ,tf) = SMatrix{16,16,Float64}(I(16))
 
 ## ----------------------------------- compute the optimal solution ----------------------------------- ##
 
-θ = LQubit2(kl=0.01,kq=0.0)
+θ = LQubit2(kl=0.01)
 t0,tf = τ = (0,5)
 x0 = SVector{16}([psi2x([1,0,0]); psi2x([1/sqrt(2),0,1im/sqrt(2)])])
 μ = t->0.3*sin(t)*ones(SVector{4})
@@ -114,6 +114,7 @@ x0 = SVector{16}([psi2x([1,0,0]); psi2x([1/sqrt(2),0,1im/sqrt(2)])])
 
 
 ## ----------------------------------- plot the results ----------------------------------- ##
+
 using GLMakie
 GLMakie.activate!()
 
