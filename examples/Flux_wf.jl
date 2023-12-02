@@ -50,14 +50,14 @@ resolve_model(Flux3)
 
 ## Compute the optimal solution
 
-θ = Flux3(kq=0.1)
-τ = t0,tf = 0,7.5
+θ = Flux3(kl=0.01,kq=0.1)
+τ = t0,tf = 0,50
 ψ1 = [1;0;0]
 ψ2 = [0;1;0]
 x0 = SVector{12}(vec([ψ1;ψ2;0*ψ1;0*ψ2]))
 μ = t->SVector{1}((π/tf)*exp(-(t-tf/2)^2/(tf^2))*cos(2*π*0.74156*t))
 η = open_loop(θ, x0, μ, τ) # guess trajectory
-ξ,data = pronto(θ, x0, η, τ;tol=1e-5); # optimal trajectory
+ξ,data = pronto(θ, x0, η, τ;tol=1e-4); # optimal trajectory
 
 ## Plot the results
 

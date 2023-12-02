@@ -33,7 +33,7 @@ end
     
     H0 = diagm([0,2])
     Hc = [0 1;1 0]
-    L = 0*sqrt(1/500)*[0 1;0 0] # need sqrt for decay
+    L = sqrt(1/10)*[0 0;1 0] # need sqrt for decay
     # L = 1/2*[1 0;0 -1] # no need sqrt for dephase
     # L = zeros(2,2)
 
@@ -62,10 +62,11 @@ PRONTO.Pf(θ::SQubit,α,μ,tf) = SMatrix{3,3,Float64}(I(3))
 
 θ = SQubit(kl=0.01)
 t0,tf = τ = (0,10)
-x0 = SVector{3}([1,0,0])
-μ = t->SVector{1}(0.3*sin(t))
-η = open_loop(θ,x0,μ,τ)
-ξ,data = pronto(θ,x0,η,τ;tol=1e-4,maxiters=50);
+# x0 = SVector{3}([1,0,0])
+x0 = SVector{3}([0,0,1])
+μ = t->SVector{1}(0.0*sin(t))
+η = open_loop(θ,x0,μ,τ);
+# ξ,data = pronto(θ,x0,η,τ;tol=1e-4,maxiters=50);
 
 ## ----------------------------------- plot the results ----------------------------------- ##
 
@@ -78,8 +79,8 @@ X = [0 1;1 0]
 Y = [0 -im;im 0]
 Z = [1 0;0 -1]
 
-# ρ = [1/2*(I(2) + η.x(t)[1]*X + η.x(t)[2]*Y + η.x(t)[3]*Z) for t in ts]
-ρ = [1/2*(I(2) + ξ.x(t)[1]*X + ξ.x(t)[2]*Y + ξ.x(t)[3]*Z) for t in ts]
+ρ = [1/2*(I(2) + η.x(t)[1]*X + η.x(t)[2]*Y + η.x(t)[3]*Z) for t in ts]
+# ρ = [1/2*(I(2) + ξ.x(t)[1]*X + ξ.x(t)[2]*Y + ξ.x(t)[3]*Z) for t in ts]
 
 p1 = zeros(length(ts))
 p2 = zeros(length(ts))
@@ -89,7 +90,7 @@ for i in 1:length(ts)
     p1[i] = real([1 0]*ρ[i]*[1;0])[1]
     p2[i] = real([0 1]*ρ[i]*[0;1])[1]
     # p3[i] = 1/2-1/2*1/exp(1)
-    # p3[i] = 1 * 1/exp(1)
+    p3[i] = 1 * 1/exp(1)
 end
 
  
@@ -99,7 +100,7 @@ fig = Figure()
 ax = Axis(fig[1, 1])
 lines!(ax, ts, real(p1); color=:red, linewidth=2, label = "|0⟩")
 lines!(ax, ts, real(p2); color=:blue, linewidth=2, label = "|1⟩")
-# lines!(ax, ts, real(p3); color=:green, linewidth=2, label = "1/e")
+lines!(ax, ts, real(p3); color=:green, linewidth=2, label = "1/e")
 axislegend(ax, position = :rc)
 
 display(fig)
