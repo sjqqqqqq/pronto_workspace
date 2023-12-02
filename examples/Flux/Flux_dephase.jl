@@ -51,11 +51,11 @@ end
 
 ## ----------------------------------- define the model ----------------------------------- ##
 
-@kwdef struct LQubit <: PRONTO.Model{8,1}
+@kwdef struct Dephase <: PRONTO.Model{8,1}
     kl::Float64 # stage cost gain
 end
 
-@define_f LQubit begin
+@define_f Dephase begin
     
     E0 = 0.0
     E1 = 0.74156
@@ -81,26 +81,9 @@ end
  
 end
 
-@define_l LQubit begin
-    kl/2*u'*I*u 
-end
-
-@define_m LQubit begin
-    xf = psi2x([0;1;0])
-    1/2*(x-real(xf))'*(x-real(xf))
-end
-
-@define_Q LQubit I(8)
-
-@define_R LQubit I(1)
-
-resolve_model(LQubit)
-
-PRONTO.Pf(θ::LQubit,α,μ,tf) = SMatrix{8,8,Float64}(I(8))
-
 ## ----------------------------------- compute the optimal solution ----------------------------------- ##
 
-θ = LQubit(kl=0.01)
+θ = Dephase(kl=0.01)
 t0,tf = τ = (0,2000)
 x0 = SVector{8}(psi2x(1/sqrt(2)*[1;1;0]))
 μ = t->SVector{1}(0.0*cos(t))
@@ -131,10 +114,10 @@ for i in 1:length(ts)
 end
 
 fig = Figure()
-ax = Axis(fig[1, 1])
+ax = Axis(fig[1, 1], xlabel = "time (ns)", ylabel = "population", title = "dephase")
 lines!(ax, ts, real(p1); color=:blue, linewidth=2, label = "|+⟩")
 lines!(ax, ts, real(p2); color=:red, linewidth=2, label = "|-⟩")
-lines!(ax, ts, real(p3); color=:purple,linestyle=:dash, linewidth=2, label = "(1-1/e)/2)")
+lines!(ax, ts, real(p3); color=:green,linestyle=:dash, linewidth=2, label = "(1-1/e)/2)")
 lines!(ax, ts, real(p4); color=:purple,linestyle=:dash, linewidth=2, label = "(1+1/e)/2)")
 axislegend(ax, position = :rt)
 

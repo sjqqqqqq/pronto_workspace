@@ -55,7 +55,7 @@ resolve_model(Flux3Ex)
 ψ1 = [1;0;0]
 ψ2 = [0;1;0]
 x0 = SVector{13}(vec([ψ1;ψ2;0*ψ1;0*ψ2;0]))
-μ = t->SVector{1}((π/tf)*exp(-(t-tf/2)^2/(tf^2))*cos(2*π*0.74156*t))
+μ = t->SVector{1}(2*π*sin(t))
 η = open_loop(θ, x0, μ, τ) # guess trajectory
 ξ,data = pronto(θ, x0, η, τ;tol=1e-4); # optimal trajectory
 
