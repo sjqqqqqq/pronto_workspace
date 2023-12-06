@@ -26,7 +26,7 @@ function psi2x(ψ)
     return x
 end
 
-function q_model(n,H0,Hc,L,x,u)
+function q_model(n,H0,Hc,L,x,u)  
   
     A = gellmann(n; normalize=true)
 
@@ -53,7 +53,9 @@ end
 
 @kwdef struct Decay <: PRONTO.Model{8,1}
     kl::Float64 # stage cost gain
+    T1::Float64 = 1000 # T1 time
 end
+
 
 @define_f Decay begin
     
@@ -71,10 +73,10 @@ end
     ψ1 = [0;1;0]
     ψ2 = [0;0;1]    
 
-    T1 = 1000
     L1 = 1.0 * sqrt(1/T1) * ψ0 * ψ1'
     
-    L = Matrix{ComplexF64}[]
+    # L = Matrix{ComplexF64}[]
+    L = Matrix{Any}[]
     push!(L, L1)
 
     q_model(3,H0,Hc,L,x,u)
@@ -83,7 +85,7 @@ end
 
 ## ----------------------------------- compute the optimal solution ----------------------------------- ##
 
-θ = Decay(kl=0.01)
+θ = Decay(kl=0.01,T1=500.0)
 t0,tf = τ = (0,2000)
 x0 = SVector{8}(psi2x([0;1;0]))
 μ = t->SVector{1}(0.0*cos(t))
