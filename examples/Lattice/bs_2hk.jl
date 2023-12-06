@@ -80,6 +80,7 @@ PRONTO.preview(θ::Split2, ξ) = [I(9) I(9)]*(ξ.x.^2)
 t0,tf = τ = (0,1.9)
 x0 = SVector{18}(x_eig(1))
 μ = t->SVector{1}(0.5*sin(4*t))
+# μ = ξ.u
 η = open_loop(θ,x0,μ,τ)
 ξ,data = pronto(θ,x0,η,τ;tol=1e-4,maxiters=100,show_steps=false);
 
