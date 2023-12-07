@@ -53,6 +53,7 @@ end
 
 @kwdef struct Dephase <: PRONTO.Model{8,1}
     kl::Float64 # stage cost gain
+    T2::Float64  # T2 time
 end
 
 @define_f Dephase begin
@@ -71,10 +72,9 @@ end
     ψ1 = [0;1;0]
     ψ2 = [0;0;1]    
 
-    T2 = 1000.0
     L2 = 1.0 * sqrt(2*1/T2) * [0 0 0; 0 1 0; 0 0 0]
 
-    L = Matrix{ComplexF64}[]
+    L = Matrix{Any}[]
     push!(L, L2)
 
     q_model(3,H0,Hc,L,x,u)
@@ -83,7 +83,7 @@ end
 
 ## ----------------------------------- compute the optimal solution ----------------------------------- ##
 
-θ = Dephase(kl=0.01)
+θ = Dephase(kl=0.01,T2=1000.0)
 t0,tf = τ = (0,2000)
 x0 = SVector{8}(psi2x(1/sqrt(2)*[1;1;0]))
 μ = t->SVector{1}(0.0*cos(t))
