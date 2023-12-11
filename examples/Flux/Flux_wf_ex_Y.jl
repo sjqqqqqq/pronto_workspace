@@ -15,13 +15,13 @@ end
 
 ## Three-level Qubit model
 
-@kwdef struct Flux3 <: PRONTO.Model{12,1}
-    kl::Float64
-    kq::Float64
+@kwdef struct Flux3ExY <: PRONTO.Model{13,1}
+    kl::Float64 = 0.01
+    kq::Float64 = 0.0
     T::Float64 
 end
 
-@define_f Flux3 begin
+@define_f Flux3ExY begin
     E0 = 0.0
     E1 = 0.74156
     E2 = 4.017875
@@ -29,33 +29,33 @@ end
     H00 = kron(I(2),H0)
     H1 = [0 -0.15466im 0; 0.15466im 0 -0.54512im; 0 0.54512im 0]
     H11 = kron(I(2),H1)
-    return 2 * π * mprod(-im * (H00 + u[1]*H11)) * x
+    return [2 * π * mprod(-im * (H00 + x[13]*H11)) * x[1:12];u[1]]
 end
 
-@define_l Flux3 begin
-    1/2*max(kl,100*10^(-2*t),100*10^(2*(t-T)))*u'*I*u + kq/2*x'*mprod(diagm([0,0,1,0,0,1]))*x
+@define_l Flux3ExY begin
+    kl/2*u'*I*u + kq/2*x[1:12]'*mprod(diagm([0,0,1,0,0,1]))*x[1:12] + 1/2*max(kl,100*10^(-2*t),100*10^(2*(t-T)))*x[13]'*I*x[13]
 end
 
-@define_m Flux3 begin
-    ψ1 = [1;0;0]
-    ψ2 = [0;1;0]
-    xf = vec([ψ2;ψ1;0*ψ2;0*ψ1])
-    return 1/2*(x-xf)'*I(12)*(x-xf)
+@define_m Flux3ExY begin
+    ψ1 = [0;1;0]
+    ψ2 = [-1;0;0]
+    xf = vec([0*ψ1;0*ψ2;ψ1;ψ2;0])
+    return 1/2*(x-xf)'*I(13)*(x-xf)
 end
 
-@define_Q Flux3 I(12)
-@define_R Flux3 I(1)
-PRONTO.Pf(θ::Flux3,α,μ,tf) = SMatrix{12,12,Float64}(I(12))
+@define_Q Flux3ExY I(13)
+@define_R Flux3ExY I(1)
+PRONTO.Pf(θ::Flux3ExY,α,μ,tf) = SMatrix{13,13,Float64}(I(13))
 
-resolve_model(Flux3)
+resolve_model(Flux3ExY)
 
 ## Compute the optimal solution
 
-θ = Flux3(kl=0.01,kq=0.1,T=33.0)
+θ = Flux3ExY(kl=0.01,kq=0.1,T=33.0)
 τ = t0,tf = 0,θ.T
 ψ1 = [1;0;0]
 ψ2 = [0;1;0]
-x0 = SVector{12}(vec([ψ1;ψ2;0*ψ1;0*ψ2]))
+x0 = SVector{13}(vec([ψ1;ψ2;0*ψ1;0*ψ2;0]))
 μ = t->SVector{1}((π/tf)*exp(-(t-tf/2)^2/(tf^2))*cos(2*π*0.74156*t))
 η = open_loop(θ, x0, μ, τ) # guess trajectory
 ξ,data = pronto(θ, x0, η, τ;tol=1e-4); # optimal trajectory
@@ -66,11 +66,11 @@ using GLMakie
 
 fig = Figure()
 ts = range(t0,tf,length=1001)
-ax1 = Axis(fig[1,1], xlabel = "time (ns)", ylabel = "control input")
-ax2 = Axis(fig[2,1], xlabel = "time (ns)", ylabel = "population")
-ax3 = Axis(fig[3,1], xlabel = "time (ns)", ylabel = "population")
+ax1 = Axis(fig[1,1], xlabel = "time", ylabel = "control input")
+ax2 = Axis(fig[2,1], xlabel = "time", ylabel = "population")
+ax3 = Axis(fig[3,1], xlabel = "time", ylabel = "population")
 
-lines!(ax1, ts, [ξ.u(t)[1] for t in ts], linewidth = 2)
+lines!(ax1, ts, [ξ.x(t)[13] for t in ts], linewidth = 2)
 
 lines!(ax2, ts, [ξ.x(t)[1]^2+ξ.x(t)[7]^2 for t in ts], linewidth = 2, label = "|0⟩")
 lines!(ax2, ts, [ξ.x(t)[2]^2+ξ.x(t)[8]^2 for t in ts], linewidth = 2, label = "|1⟩")
@@ -83,3 +83,14 @@ lines!(ax3, ts, [ξ.x(t)[6]^2+ξ.x(t)[12]^2 for t in ts], linewidth = 2, label =
 axislegend(ax3, position = :rc)
 
 display(fig)
+
+## output results
+using MAT
+
+dt = 0.1453218
+ts = 0:dt:tf
+# ts = 0:0.001:33
+us = [ξ.x(t)[end] for t in ts]
+file = matopen("Uopt_Flux_Y.mat", "w")
+write(file, "Uopt_Y", us)
+close(file)

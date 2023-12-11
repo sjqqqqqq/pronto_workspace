@@ -18,11 +18,12 @@ end
 @kwdef struct Flux3Ex <: PRONTO.Model{13,1}
     kl::Float64 = 0.01
     kq::Float64 = 0.0
+    T::Float64 
 end
 
 @define_f Flux3Ex begin
     E0 = 0.0
-    E1 = 0.74156
+    E1 = 0.5725
     E2 = 4.017875
     H0 = diagm([E0, E1, E2])
     H00 = kron(I(2),H0)
@@ -32,7 +33,7 @@ end
 end
 
 @define_l Flux3Ex begin
-    kl/2*u'*I*u + kq/2*x[1:12]'*mprod(diagm([0,0,1,0,0,1]))*x[1:12]
+    kl/2*u'*I*u + kq/2*x[1:12]'*mprod(diagm([0,0,1,0,0,1]))*x[1:12] + 1/2*max(kl,100*10^(-0.4*t),100*10^(0.4*(t-T)))*x[13]'*I*x[13]
 end
 
 @define_m Flux3Ex begin
@@ -50,12 +51,13 @@ resolve_model(Flux3Ex)
 
 ## Compute the optimal solution
 
-θ = Flux3Ex(kl=0.01,kq=0.1)
-τ = t0,tf = 0,100
+θ = Flux3Ex(kl=0.01,kq=0.1,T=500)
+τ = t0,tf = 0,θ.T
 ψ1 = [1;0;0]
 ψ2 = [0;1;0]
 x0 = SVector{13}(vec([ψ1;ψ2;0*ψ1;0*ψ2;0]))
-μ = t->SVector{1}(2*π*sin(t))
+# μ = t->SVector{1}((π/tf)*exp(-(t-tf/2)^2/(tf^2))*cos(2*π*0.5725*t))
+μ = t->SVector{1}(0.02*sin(2*π*0.5725*t))
 η = open_loop(θ, x0, μ, τ) # guess trajectory
 ξ,data = pronto(θ, x0, η, τ;tol=1e-4); # optimal trajectory
 
@@ -82,3 +84,14 @@ lines!(ax3, ts, [ξ.x(t)[6]^2+ξ.x(t)[12]^2 for t in ts], linewidth = 2, label =
 axislegend(ax3, position = :rc)
 
 display(fig)
+
+## output results
+using MAT
+
+dt = 0.1453218
+ts = 0:dt:tf
+# ts = 0:0.001:33
+us = [ξ.x(t)[end] for t in ts]
+file = matopen("Uopt_Flux_X_100ns.mat", "w")
+write(file, "Uopt_X", us)
+close(file)

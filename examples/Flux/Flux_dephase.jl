@@ -83,8 +83,8 @@ end
 
 ## ----------------------------------- compute the optimal solution ----------------------------------- ##
 
-θ = Dephase(kl=0.01,T2=1000.0)
-t0,tf = τ = (0,2000)
+θ = Dephase(kl=0.01,T2=10000.0)
+t0,tf = τ = (0,20000)
 x0 = SVector{8}(psi2x(1/sqrt(2)*[1;1;0]))
 μ = t->SVector{1}(0.0*cos(t))
 η = open_loop(θ,x0,μ,τ)
