@@ -15,13 +15,13 @@ end
 
 ## Two-level Qubit model
 
-@kwdef struct Flux2 <: PRONTO.Model{8,1}
+@kwdef struct WaveFunc <: PRONTO.Model{8,1}
     kl::Float64
     kr::Float64
     T::Float64 
 end
 
-@define_f Flux2 begin
+@define_f WaveFunc begin
     E0 = 0.0
     E1 = 0.5725
     H0 = diagm([E0, E1])
@@ -31,27 +31,27 @@ end
     return 2 * π * mprod(-im * (H00 + u[1]*H11)) * x
 end
 
-@define_l Flux2 begin
+@define_l WaveFunc begin
     1/2*max(kl,10*100^(-0.2*t),10*100^(0.2*(t-T)))*u'*I*u
 end
 
-@define_m Flux2 begin
+@define_m WaveFunc begin    # todo: change terminal cost to gate fidelity
     ψ1 = [1;0]
     ψ2 = [0;1]
     xf = vec([ψ2;ψ1;0*ψ2;0*ψ1])
     return 1/2*(x-xf)'*I(8)*(x-xf)
 end
 
-@define_Q Flux2 I(8)
-@define_R Flux2 kr*I(1)
-PRONTO.Pf(θ::Flux2,α,μ,tf) = SMatrix{8,8,Float64}(I(8))
+@define_Q WaveFunc I(8)
+@define_R WaveFunc kr*I(1)
+PRONTO.Pf(θ::WaveFunc,α,μ,tf) = SMatrix{8,8,Float64}(I(8))
 
-resolve_model(Flux2)
+resolve_model(WaveFunc)
 
 ## Compute the optimal solution
 
-# θ = Flux2(kl=0.2,kr=10,T=200) # 200ns optimal pulse
-θ = Flux2(kl=0.2,kr=10,T=600) # 600ns optimal pulse
+θ = WaveFunc(kl=0.2,kr=10,T=200) # 200ns optimal pulse
+# θ = WaveFunc(kl=0.2,kr=10,T=600) # 600ns optimal pulse
 τ = t0,tf = 0,θ.T
 ψ1 = [1;0]
 ψ2 = [0;1]
@@ -83,12 +83,12 @@ axislegend(ax3, position = :rc)
 
 display(fig)
 
-## output results
-using MAT
+# ## output results
+# using MAT
 
-dt = 0.1453218
-ts = 0:dt:tf
-us = [ξ.u(t)[1] for t in ts]
-file = matopen("Uopt_Flux_X_600ns.mat", "w")
-write(file, "Uopt_X", us)
-close(file)
+# dt = 0.1453218
+# ts = 0:dt:tf
+# us = [ξ.u(t)[1] for t in ts]
+# file = matopen("Uopt_Flux_X_600ns.mat", "w")
+# write(file, "Uopt_X", us)
+# close(file)

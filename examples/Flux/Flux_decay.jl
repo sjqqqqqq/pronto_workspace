@@ -66,7 +66,7 @@ end
 
     H1 = 2*π*[0 -0.15466im 0; 0.15466im 0 -0.54512im; 0 0.54512im 0]
 
-    Hc = Matrix{ComplexF64}[]
+    Hc = Any[]
     push!(Hc, H1)
    
     ψ0 = [1;0;0]
@@ -85,7 +85,7 @@ end
 
 ## ----------------------------------- compute the optimal solution ----------------------------------- ##
 
-θ = Decay(kl=0.01,T1=500.0)
+θ = Decay(kl=0.01,T1=1000.0)
 t0,tf = τ = (0,2000)
 x0 = SVector{8}(psi2x([0;1;0]))
 μ = t->SVector{1}(0.0*cos(t))
