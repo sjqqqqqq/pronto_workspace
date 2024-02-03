@@ -51,46 +51,63 @@ end
 
 ## ----------------------------------- define the model ----------------------------------- ##
 
-@kwdef struct Dephase <: PRONTO.Model{8,1}
+@kwdef struct LQubit <: PRONTO.Model{3,1}
     kl::Float64 # stage cost gain
-    T2::Float64  # T2 time
+    T1::Float64 # decay time
+    T2::Float64 # dephasing time
 end
 
-@define_f Dephase begin
+@define_f LQubit begin
     
     E0 = 0.0
-    E1 = 0.74156
-    E2 = 4.017875
-    H0 = 0*2*π*diagm([E0, E1, E2])
+    E1 = 0.5725
+    H0 = 2*π*diagm([E0, E1])
 
-    H1 = 2*π*[0 -0.15466im 0; 0.15466im 0 -0.54512im; 0 0.54512im 0]
+    H1 = 2*π*[0 -1im; 1im 0]
 
-    Hc = Any[]
+    Hc = Matrix{ComplexF64}[]
     push!(Hc, H1)
    
-    ψ0 = [1;0;0]
-    ψ1 = [0;1;0]
-    ψ2 = [0;0;1]    
-
-    L2 = 1.0 * sqrt(2*1/T2) * [0 0 0; 0 1 0; 0 0 0]
+    ψ0 = [1;0]
+    ψ1 = [0;1]    
+    L1 = 1.0 * sqrt(1/T1) * ψ0 * ψ1'
+    L2 = 1.0 * sqrt(2*1/T2) * [0 0; 0 1]
 
     L = Matrix{Any}[]
-    push!(L, L2)
+    push!(L, L1, L2)
 
-    q_model(3,H0,Hc,L,x,u)
+    q_model(2,H0,Hc,L,x,u)
  
 end
 
+@define_l LQubit begin
+    kl/2*u'*I*u 
+end
+
+@define_m LQubit begin
+    X = [0 1; 1 0]
+    ρf = X*x2rho(psi2x([1,0]))*X'
+    real(tr((x2rho(x)-ρf)'*(x2rho(x)-ρf)))
+end
+
+@define_Q LQubit I(3)
+
+@define_R LQubit I(1)
+
+resolve_model(LQubit)
+
+PRONTO.Pf(θ::LQubit,α,μ,tf) = SMatrix{3,3,Float64}(I(3))
+
 ## ----------------------------------- compute the optimal solution ----------------------------------- ##
 
-θ = Dephase(kl=0.01,T2=500.0)
-t0,tf = τ = (0,2000)
-x0 = SVector{8}(psi2x(1/sqrt(2)*[1;1;0]))
-μ = t->SVector{1}(0.0*cos(t))
+θ = LQubit(kl=0.01,T1=1000,T2=500)
+t0,tf = τ = (0,100)
+x0 = SVector{3}(psi2x([1;0]))
+μ = t->SVector{1}(0.001*sin(2*π*0.5725*t))
 η = open_loop(θ,x0,μ,τ)
+ξ,data = pronto(θ,x0,η,τ;tol=1e-5,maxiters=50);
 
 ## ----------------------------------- plot the results ----------------------------------- ##
-
 using GLMakie
 GLMakie.activate!()
 
@@ -100,25 +117,19 @@ ts = range(t0,tf,length=1001);
 
 p1 = zeros(length(ts))
 p2 = zeros(length(ts))
-p3 = zeros(length(ts))
-p4 = zeros(length(ts))
 
-plus = 1/sqrt(2)*[1;1;0]
-minus = 1/sqrt(2)*[1;-1;0]
+ψ0 = [1,0]
+ψ1 = [0;1]
 
 for i in 1:length(ts)
-    p1[i] = real(plus'*ρ[i]*plus)[1]
-    p2[i] = real(minus'*ρ[i]*minus)[1]
-    p3[i] = (1+1/exp(1))/2 
-    p4[i] = (1-1/exp(1))/2
+    p1[i] = real(ψ0'*ρ[i]*ψ0)[1]
+    p2[i] = real(ψ1'*ρ[i]*ψ1)[1]
 end
 
 fig = Figure()
-ax = Axis(fig[1, 1], xlabel = "time (ns)", ylabel = "population", title = "dephase")
-lines!(ax, ts, real(p1); color=:blue, linewidth=2, label = "|+⟩")
-lines!(ax, ts, real(p2); color=:red, linewidth=2, label = "|-⟩")
-lines!(ax, ts, real(p3); color=:green,linestyle=:dash, linewidth=2, label = "(1+1/e)/2)")
-lines!(ax, ts, real(p4); color=:purple,linestyle=:dash, linewidth=2, label = "(1-1/e)/2)")
-axislegend(ax, position = :rt)
+ax = Axis(fig[1, 1])
+lines!(ax, ts, real(p1); color=:red, linewidth=2, label = "|0⟩")
+lines!(ax, ts, real(p2); color=:blue, linewidth=2, label = "|1⟩")
+axislegend(ax, position = :rc)
 
 display(fig)
