@@ -24,7 +24,7 @@ end
 @define_f WFExtension begin
     E0 = 0.0
     # E1 = 0.5725
-    E1 = 0.65225
+    E1 = 0.65594
     H0 = diagm([E0, E1])
     H00 = kron(I(2),H0)
     H1 = [0 -1im; 1im 0]
@@ -56,7 +56,7 @@ resolve_model(WFExtension)
 ψ1 = [1;0]
 ψ2 = [0;1]
 x0 = SVector{9}(vec([ψ1;ψ2;0*ψ1;0*ψ2;0]))
-μ = t->SVector{1}((π/tf)*exp(-(t-tf/2)^2/(tf^2))*sin(2*π*0.65225*t))
+μ = t->SVector{1}((π/tf)*exp(-(t-tf/2)^2/(tf^2))*sin(2*π*0.65594*t))
 η = open_loop(θ, x0, μ, τ) # guess trajectory
 ξ,data = pronto(θ, x0, η, τ;tol=1e-4); # optimal trajectory
 
