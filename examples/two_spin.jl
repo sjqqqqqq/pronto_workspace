@@ -32,11 +32,19 @@ resolve_model(Qubit)
 
 ## Compute the optimal solution
 
+using DelimitedFiles
+using Interpolations
+
 θ = Qubit() # instantiate a new model
 τ = t0,tf = 0,10 # define time domain
+tt = 0:0.001:10
 x0 = @SVector [1.0, 0.0, 0.0, 0.0] # initial state
 xf = @SVector [0.0, 1.0, 0.0, 0.0] # final state
-μ = t->SVector{1}(0.4*sin(t)) # open loop input μ(t)
+u = readdlm("input.txt")
+uu = vec(u)
+ut = LinearInterpolation(tt, uu)
+# μ = t->SVector{1}(0.4*sin(t)) # open loop input μ(t)
+μ = t->SVector{1}(ut(t))
 η = open_loop(θ, x0, μ, τ) # guess trajectory
 ξ,data = pronto(θ, x0, η, τ;tol=1e-6); # optimal trajectory
 
