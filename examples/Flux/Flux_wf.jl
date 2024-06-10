@@ -51,7 +51,7 @@ resolve_model(Flux3)
 
 ## Compute the optimal solution
 
-θ = Flux3(kl=0.01,kq=0.1,T=33.0)
+θ = Flux3(kl=0.01,kq=0.1,T=100.0)
 τ = t0,tf = 0,θ.T
 ψ1 = [1;0;0]
 ψ2 = [0;1;0]
@@ -83,3 +83,10 @@ lines!(ax3, ts, [ξ.x(t)[6]^2+ξ.x(t)[12]^2 for t in ts], linewidth = 2, label =
 axislegend(ax3, position = :rc)
 
 display(fig)
+
+##
+function GateFidelityX(xT)
+    X = [0 1; 1 0]
+    UT = [xT[1]+xT[7]im xT[4]+xT[10]im; xT[2]+xT[8]im xT[5]+xT[11]im]
+    return (abs(tr(UT*X'))^2+2)/6
+end

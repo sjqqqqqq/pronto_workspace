@@ -56,7 +56,6 @@ resolve_model(Flux3Ex)
 ψ1 = [1;0;0]
 ψ2 = [0;1;0]
 x0 = SVector{13}(vec([ψ1;ψ2;0*ψ1;0*ψ2;0]))
-# μ = t->SVector{1}((π/tf)*exp(-(t-tf/2)^2/(tf^2))*cos(2*π*0.5725*t))
 μ = t->SVector{1}(0.02*sin(2*π*0.5725*t))
 η = open_loop(θ, x0, μ, τ) # guess trajectory
 ξ,data = pronto(θ, x0, η, τ;tol=1e-4); # optimal trajectory
@@ -68,26 +67,7 @@ using GLMakie
 fig = Figure()
 ts = range(t0,tf,length=1001)
 ax1 = Axis(fig[1,1], xlabel = "time", ylabel = "control input")
-ax2 = Axis(fig[2,1], xlabel = "time", ylabel = "population")
-ax3 = Axis(fig[3,1], xlabel = "time", ylabel = "population")
 
 lines!(ax1, ts, [ξ.x(t)[13] for t in ts], linewidth = 2)
 
-lines!(ax2, ts, [ξ.x(t)[1]^2+ξ.x(t)[7]^2 for t in ts], linewidth = 2, label = "|0⟩")
-lines!(ax2, ts, [ξ.x(t)[2]^2+ξ.x(t)[8]^2 for t in ts], linewidth = 2, label = "|1⟩")
-lines!(ax2, ts, [ξ.x(t)[3]^2+ξ.x(t)[9]^2 for t in ts], linewidth = 2, label = "|2⟩")
-axislegend(ax2, position = :rc)
-
-lines!(ax3, ts, [ξ.x(t)[4]^2+ξ.x(t)[10]^2 for t in ts], linewidth = 2, label = "|0⟩")
-lines!(ax3, ts, [ξ.x(t)[5]^2+ξ.x(t)[11]^2 for t in ts], linewidth = 2, label = "|1⟩")
-lines!(ax3, ts, [ξ.x(t)[6]^2+ξ.x(t)[12]^2 for t in ts], linewidth = 2, label = "|2⟩")
-axislegend(ax3, position = :rc)
-
 display(fig)
-
-##
-function GateFidelityX(xT)
-    X = [0 1; 1 0]
-    UT = [xT[1]+xT[7]im xT[4]+xT[10]im; xT[2]+xT[8]im xT[5]+xT[11]im]
-    return (abs(tr(UT*X'))^2+2)/6
-end
